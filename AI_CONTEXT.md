@@ -44,7 +44,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
     - Registers **managers** (e.g. `SyncManager`).
   - Declares **Riverpod providers**:
     - Global app providers: `appGlobalProvider`, `authGlobalProvider`, `appThemeProvider`, `webSocketProvider`, `syncManagerProvider`.
-    - Feature view model providers: `authViewModelProvider`, `homeViewModelProvider`, `tradeViewModelProvider`, `dashboardViewModelProvider`, `settingsViewModelProvider`, `alarmViewModelProvider`, `splashViewModelProvider`.
+    - Feature view model providers: `authViewModelProvider`, `HomeMenuViewModelProvider`, `tradeViewModelProvider`, `dashboardViewModelProvider`, `settingsViewModelProvider`, `alarmViewModelProvider`, `splashViewModelProvider`.
 
 ### lib/core/
 
@@ -226,7 +226,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 ### Classes & Types
 
 - **PascalCase** for classes, enums, type aliases:
-  - `HomeView`, `AlarmViewModel`, `UserDataEntity`, `UserDataModel`, `AuthUseCase`, `CacheUseCase`, `AppGlobalProvider`, `WebSocketNotifier`, `CustomSizedBox`, `DefaultColorPalette`.
+  - `HomeMenuView`, `AlarmViewModel`, `UserDataEntity`, `UserDataModel`, `AuthUseCase`, `CacheUseCase`, `AppGlobalProvider`, `WebSocketNotifier`, `CustomSizedBox`, `DefaultColorPalette`.
 - **Interfaces & abstract contracts**:
   - **Repositories**: `IFirestoreRepository`, `ICacheRepository`, `IWebSocketRepository`.
   - **Services**: `IFirestoreService`, `ICacheService`, `IMessagingService`, `ISignInService`.
@@ -237,7 +237,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 ### Methods & Variables
 
 - **Methods**: camelCase, verb-first:
-  - Examples: `initHomeView`, `getLatestUserData`, `updateSocketCurrency`, `saveAlarm`, `signInUser`, `switchAppTheme`.
+  - Examples: `initHomeMenuView`, `getLatestUserData`, `updateSocketCurrency`, `saveAlarm`, `signInUser`, `switchAppTheme`.
 - **Private fields**: prefix with `_` (e.g. `_userData`, `_totalProfitPercent`, `_authSubscription`).
 - **Booleans**: `isX`, `hasX`, `canX`, `shouldX`, `showX`.
 - **Controllers**: `*Controller` suffix (`emailController`, `passwordController`, `searchBarController`, `tabController`).
@@ -245,7 +245,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 
 ### Widgets
 
-- **Screens**: `SomethingView` (e.g. `HomeView`, `AlarmView`, `DashboardView`).
+- **Screens**: `SomethingView` (e.g. `HomeMenuView`, `AlarmView`, `DashboardView`).
 - **Reusable components**: `SomethingWidget` (e.g. `CustomCardWidget`, `CurrencyListWidget`, `BalanceTextWidget`).
 - **Common helpers**: `CustomSizedBox`, `CustomPadding`, `CustomDropDownWidget` centralize styling and layout.
 
@@ -276,7 +276,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
     - Current asset list (`globalAssets`, `assetCodes`, `userCurrencies`).
     - Computed fields: profit, balance, latest balance.
   - It is updated by:
-    - `HomeViewModel.listenToSocketData` and `WebSocketNotifier` for WebSocket updates.
+    - `HomeMenuViewModel.listenToSocketData` and `WebSocketNotifier` for WebSocket updates.
     - `DatabaseUseCase.getUserData` for Firestore user data.
 
 - **Theme**:
@@ -288,14 +288,14 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 
 - **ViewModels** as `ChangeNotifier`:
   - Each feature has a dedicated view model provider, e.g.:
-    - `homeViewModelProvider` → `HomeViewModel`
+    - `HomeMenuViewModelProvider` → `HomeMenuViewModel`
     - `alarmViewModelProvider` → `AlarmViewModel`
     - `authViewModelProvider` → `AuthViewModel`
   - Views access them with `ref.read(..)` for commands, `ref.watch(..)` for reactive properties.
 
 - **WebSocket**:
   - `WebSocketNotifier.initializeSocket()` establishes a connection and exposes `socketDataStream`.
-  - `HomeViewModel.listenToSocketData` watches `webSocketProvider` and forwards the stream to `AppGlobalProvider.updateSocketCurrency`.
+  - `HomeMenuViewModel.listenToSocketData` watches `webSocketProvider` and forwards the stream to `AppGlobalProvider.updateSocketCurrency`.
 
 ---
 
@@ -303,19 +303,19 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 
 ### UI (Views)
 
-- **Screens** like `HomeView`, `AlarmView`, `LoginView`, `SplashView`:
+- **Screens** like `HomeMenuView`, `AlarmView`, `LoginView`, `SplashView`:
   - Manage ephemeral UI concerns (animations, controllers, timers, skeleton states, error flags).
   - Read from providers for reactive state (e.g. `isAuthorized`, global assets).
   - Call **view model methods** for business operations and navigation:
     - Examples:
-      - `HomeView` calls `homeViewModelProvider.initHomeView()` and uses `HomeViewModel` for search and socket data.
+      - `HomeMenuView` calls `HomeMenuViewModelProvider.initHomeMenuView()` and uses `HomeMenuViewModel` for search and socket data.
       - `AlarmView` calls `AlarmViewModel.saveAlarm` to persist alarms.
       - `LoginView` calls `AuthViewModel.signInUser`, `registerUser`, etc.
 
 ### ViewModels
 
 - Encapsulate **feature-specific business logic** and glue:
-  - `HomeViewModel`:
+  - `HomeMenuViewModel`:
     - Controls search text and filter logic for currency data.
     - Bridges `webSocketProvider` and `appGlobalProvider`.
   - `AlarmViewModel`:
@@ -453,7 +453,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
 1. **Initialization**:
    - `WebSocketNotifier.initializeSocket()` uses `GetSocketStreamUseCase` to open a WebSocket and exposes a broadcast `socketDataStream` in `WebSocketState`.
 
-2. **ViewModel**: `HomeViewModel.listenToSocketData`
+2. **ViewModel**: `HomeMenuViewModel.listenToSocketData`
    - Watches `webSocketProvider`.
    - If `socketDataStream != null`, passes it to `AppGlobalProvider.updateSocketCurrency`.
 
@@ -464,7 +464,7 @@ State management is built on **Riverpod** (`flutter_riverpod`) using `ProviderSc
      - Updates `assetCodes` and schedules profit calculation via `scheduleCalculation`.
      - Notifies listeners for the UI to update.
 
-4. **UI**: `HomeView`
+4. **UI**: `HomeMenuView`
    - Watches `appGlobalProvider.globalAssets` and uses them to render `CurrencyListWidget` and date/time text.
    - Displays skeletons, error states, and fallback UI when data is missing.
 
@@ -528,7 +528,7 @@ When adding a new feature, align with the current **feature + layer** structure.
   - The `viewModel` parameter is `dynamic` and relies on convention (`changeSelectedCurrency`, `getPriceSelectedCurrency`).
   - For new components, prefer strongly typed generics where possible.
 - **Some business logic in widgets**:
-  - For example, date parsing and delay calculations in `HomeView` are in the widget.
+  - For example, date parsing and delay calculations in `HomeMenuView` are in the widget.
   - When extending functionality, consider moving heavier logic into view models to keep widgets declarative.
 
 ---

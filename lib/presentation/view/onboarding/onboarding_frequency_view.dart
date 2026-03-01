@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'onboarding_environment_view.dart';
+import 'package:packpulse/domain/entity/onboarding_preferences_entity.dart';
+import 'package:packpulse/injection.dart';
+import 'package:packpulse/presentation/view/onboarding/onboarding_environment_view.dart';
 
 class OnboardingFrequencyView extends StatefulWidget {
   const OnboardingFrequencyView({super.key});
@@ -22,7 +23,14 @@ class _OnboardingFrequencyViewState extends State<OnboardingFrequencyView> {
     'Professional/Commercial',
   ];
 
-  void _goNext() {
+  Future<void> _goNext() async {
+    await Injection.onboardingCacheUseCase.savePartial(
+      OnboardingPreferencesEntity(
+        flightFrequency: _options[_selectedIndex],
+        packsPerSession: _packsPerSession.round(),
+      ),
+    );
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const OnboardingEnvironmentView(),

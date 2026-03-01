@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:packpulse/domain/entity/onboarding_preferences_entity.dart';
+import 'package:packpulse/injection.dart';
+import 'package:packpulse/presentation/view/home_menu/home_menu_view.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class OnboardingNotificationsView extends StatefulWidget {
   const OnboardingNotificationsView({super.key});
@@ -15,8 +19,38 @@ class _OnboardingNotificationsViewState
   bool _maintenanceReminders = true;
   bool _performanceReports = false;
 
-  void _finish() {
-    Navigator.of(context).popUntil((route) => route.isFirst);
+  Future<void> _onFinishSetup() async {
+    final prefs = OnboardingPreferencesEntity(
+      criticalAlerts: _criticalAlerts,
+      maintenanceReminders: _maintenanceReminders,
+      performanceReports: _performanceReports,
+      notificationsRequested: true,
+      completed: true,
+    );
+    await Injection.onboardingCacheUseCase.completeOnboarding(prefs);
+    await Permission.notification.request();
+    if (!mounted) return;
+    _navigateToHome();
+  }
+
+  Future<void> _onRemindLater() async {
+    final prefs = OnboardingPreferencesEntity(
+      criticalAlerts: _criticalAlerts,
+      maintenanceReminders: _maintenanceReminders,
+      performanceReports: _performanceReports,
+      notificationsRequested: false,
+      completed: true,
+    );
+    await Injection.onboardingCacheUseCase.completeOnboarding(prefs);
+    if (!mounted) return;
+    _navigateToHome();
+  }
+
+  void _navigateToHome() {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => HomeMenuView()),
+      (route) => false,
+    );
   }
 
   @override
@@ -53,7 +87,7 @@ class _OnboardingNotificationsViewState
                     ),
                   ),
                   Text(
-                    '5 / 5',
+                    '4 / 4',
                     style: TextStyle(
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w600,
@@ -161,7 +195,7 @@ class _OnboardingNotificationsViewState
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  onPressed: _finish,
+                  onPressed: _onFinishSetup,
                   child: Text(
                     'Finish Setup',
                     style: TextStyle(
@@ -174,7 +208,7 @@ class _OnboardingNotificationsViewState
               SizedBox(height: 8.h),
               Center(
                 child: TextButton(
-                  onPressed: _finish,
+                  onPressed: _onRemindLater,
                   child: Text(
                     'Remind me later',
                     style: TextStyle(

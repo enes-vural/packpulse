@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'onboarding_notifications_view.dart';
+import 'package:packpulse/domain/entity/onboarding_preferences_entity.dart';
+import 'package:packpulse/injection.dart';
+import 'package:packpulse/presentation/view/onboarding/onboarding_notifications_view.dart';
 
 class OnboardingEnvironmentView extends StatefulWidget {
   const OnboardingEnvironmentView({super.key});
@@ -16,7 +17,15 @@ class _OnboardingEnvironmentViewState extends State<OnboardingEnvironmentView> {
   bool _highPowerSetup = true;
   bool _adaptiveAi = true;
 
-  void _goNext() {
+  Future<void> _goNext() async {
+    await Injection.onboardingCacheUseCase.savePartial(
+      OnboardingPreferencesEntity(
+        temperatureIndex: _temperatureIndex,
+        highPowerSetup: _highPowerSetup,
+        adaptiveAi: _adaptiveAi,
+      ),
+    );
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const OnboardingNotificationsView(),
@@ -59,7 +68,7 @@ class _OnboardingEnvironmentViewState extends State<OnboardingEnvironmentView> {
                     ),
                   ),
                   Text(
-                    'Step 4 of 5',
+                    'Step 3 of 4',
                     style: TextStyle(
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w600,
@@ -180,7 +189,7 @@ class _OnboardingEnvironmentViewState extends State<OnboardingEnvironmentView> {
               SizedBox(height: 8.h),
               Center(
                 child: TextButton(
-                  onPressed: () => Navigator.of(context).maybePop(),
+                  onPressed: _goNext,
                   child: Text(
                     'Skip for now',
                     style: TextStyle(

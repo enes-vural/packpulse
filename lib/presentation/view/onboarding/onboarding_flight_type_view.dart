@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'onboarding_frequency_view.dart';
+import 'package:packpulse/domain/entity/onboarding_preferences_entity.dart';
+import 'package:packpulse/injection.dart';
+import 'package:packpulse/presentation/view/onboarding/onboarding_frequency_view.dart';
 
 class OnboardingFlightTypeView extends StatefulWidget {
   const OnboardingFlightTypeView({super.key});
@@ -22,7 +23,11 @@ class _OnboardingFlightTypeViewState extends State<OnboardingFlightTypeView> {
     'RC Planes',
   ];
 
-  void _goNext() {
+  Future<void> _goNext() async {
+    await Injection.onboardingCacheUseCase.savePartial(
+      OnboardingPreferencesEntity(flightType: _options[_selectedIndex]),
+    );
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const OnboardingFrequencyView(),
